@@ -1,7 +1,8 @@
 'use client'
 
 import { useTransition } from 'react'
-import { LogOut, User as UserIcon, Building2 } from 'lucide-react'
+import Link from 'next/link'
+import { LogOut, Building2, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,9 +24,11 @@ interface UserNavProps {
       avatar_url?: string
     }
   }
+  orgName?: string
+  role?: string
 }
 
-export function UserNav({ user }: UserNavProps) {
+export function UserNav({ user, orgName, role }: UserNavProps) {
   const [isPending, startTransition] = useTransition()
 
   const fullName = user.user_metadata?.full_name || 'User'
@@ -60,17 +63,26 @@ export function UserNav({ user }: UserNavProps) {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{fullName}</p>
             <p className="text-xs leading-none text-muted-foreground">{email}</p>
+            {orgName && (
+              <p className="text-[11px] font-semibold text-primary pt-1 capitalize">
+                {orgName} ({role?.replace('_', ' ')})
+              </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled>
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Profile settings</span>
+          <DropdownMenuItem asChild>
+            <Link href="/organization/settings" className="cursor-pointer">
+              <Building2 className="mr-2 h-4 w-4" />
+              <span>Organization Settings</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            <Building2 className="mr-2 h-4 w-4" />
-            <span>Organization</span>
+          <DropdownMenuItem asChild>
+            <Link href="/team" className="cursor-pointer">
+              <Users className="mr-2 h-4 w-4" />
+              <span>Team Members</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
