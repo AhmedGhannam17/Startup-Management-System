@@ -164,7 +164,7 @@ export default async function DashboardPage() {
                 No Organization Configured
               </CardTitle>
               <CardDescription>
-                StartupHub requires an organization to manage team members and business data.
+                UpWeGo requires an organization to manage team members and business data.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">

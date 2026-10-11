@@ -12,7 +12,7 @@ export default function RegisterPage() {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Create your account</CardTitle>
         <CardDescription>
-          Set up your StartupHub account. You&apos;ll set up your organization next.
+          Set up your UpWeGo account. You&apos;ll set up your organization next.
         </CardDescription>
       </CardHeader>
       <CardContent>

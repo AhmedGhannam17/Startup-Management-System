@@ -75,7 +75,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
         </div>
         <CardTitle className="text-2xl">You&apos;re Invited!</CardTitle>
         <CardDescription>
-          You have been invited to join <strong className="text-foreground font-semibold">{orgName}</strong> on StartupHub.
+          You have been invited to join <strong className="text-foreground font-semibold">{orgName}</strong> on UpWeGo.
         </CardDescription>
       </CardHeader>
 

@@ -9,7 +9,7 @@ import { getActiveOrganizationContext } from '@/lib/organization/context'
 import type { Database, OrganizationRole } from '@/types/supabase'
 import type { ActionResult } from './organization'
 
-const ACTIVE_ORG_COOKIE = 'startuphub_active_org_id'
+const ACTIVE_ORG_COOKIE = 'upwego_active_org_id'
 
 /**
  * Computes SHA-256 hash of a plaintext token using standard Web Crypto API.
@@ -36,7 +36,9 @@ function generateToken(): string {
 /**
  * Invite a new member to the organization (Owner & Project Manager only).
  */
-export async function inviteMember(formData: FormData): Promise<ActionResult<{ inviteUrl: string }>> {
+export async function inviteMember(
+  formData: FormData
+): Promise<ActionResult<{ inviteUrl: string }>> {
   const context = await getActiveOrganizationContext()
   if (!context || !context.isManager) {
     return { success: false, error: 'Only Owners and Project Managers can invite new members' }
@@ -155,7 +157,12 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
 
   // Set active org cookie
   const cookieStore = await cookies()
-  cookieStore.set(ACTIVE_ORG_COOKIE, orgId, { path: '/' })
+  cookieStore.set(ACTIVE_ORG_COOKIE, orgId, {
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')

@@ -1,8 +1,8 @@
-# StartupHub
+# UpWeGo
 
 ## Universal Product Requirements Document
 
-**Product:** StartupHub
+**Product:** UpWeGo
 **Document Type:** Universal Product Requirements Document
 **Status:** Product Definition
 **Version:** 1.0
@@ -11,7 +11,7 @@
 
 # 1. Product Overview
 
-StartupHub is a business management platform designed for digital agencies and small service-based businesses.
+UpWeGo is a business management platform designed for digital agencies and small service-based businesses.
 
 It provides a centralized workspace where a business can manage its:
 
@@ -28,7 +28,7 @@ It provides a centralized workspace where a business can manage its:
 
 The goal is to replace scattered tools, spreadsheets, chats, documents, and manual tracking with one organized system.
 
-StartupHub is designed to be SaaS-ready so that the same product can eventually serve multiple independent businesses and organizations.
+UpWeGo is designed to be SaaS-ready so that the same product can eventually serve multiple independent businesses and organizations.
 
 ---
 
@@ -64,15 +64,15 @@ A small agency should not need to maintain several disconnected systems simply t
 > How much is still outstanding?
 > What important information belongs to each project?
 
-StartupHub solves this by bringing these operational workflows into one connected system.
+UpWeGo solves this by bringing these operational workflows into one connected system.
 
 ---
 
-# 3. Why StartupHub Is Being Built
+# 3. Why UpWeGo Is Being Built
 
-StartupHub is being built to create a practical operating system for a digital agency.
+UpWeGo is being built to create a practical operating system for a digital agency.
 
-Instead of treating clients, projects, tasks, quotations, and payments as separate pieces of information, StartupHub connects them.
+Instead of treating clients, projects, tasks, quotations, and payments as separate pieces of information, UpWeGo connects them.
 
 For example:
 
@@ -148,13 +148,13 @@ Access should depend on the permissions granted to the employee.
 
 ### Future Business Users
 
-The architecture should allow StartupHub to eventually support other small businesses and service-based organizations beyond digital agencies.
+The architecture should allow UpWeGo to eventually support other small businesses and service-based organizations beyond digital agencies.
 
 ---
 
 # 5. Product Goals
 
-StartupHub should:
+UpWeGo should:
 
 1. Centralize agency/business operations.
 2. Reduce dependence on spreadsheets and scattered tools.
@@ -171,7 +171,7 @@ StartupHub should:
 
 # 6. Product Principles
 
-StartupHub should follow these principles:
+UpWeGo should follow these principles:
 
 ### Simplicity
 
@@ -205,7 +205,7 @@ The product should remain understandable and maintainable as it grows.
 
 # 7. Core Product Features
 
-StartupHub consists of the following major functional areas.
+UpWeGo consists of the following major functional areas.
 
 ---
 
@@ -230,9 +230,9 @@ The system should securely distinguish authenticated and unauthenticated users.
 
 # 9. Organizations
 
-StartupHub is designed around organizations.
+UpWeGo is designed around organizations.
 
-An organization represents a business using StartupHub.
+An organization represents a business using UpWeGo.
 
 An organization should have information such as:
 
@@ -301,7 +301,7 @@ The recipient should be able to activate their account through the invitation pr
 
 # 12. Project Management
 
-Projects are one of the central entities in StartupHub.
+Projects are one of the central entities in UpWeGo.
 
 A project should contain information such as:
 
@@ -400,7 +400,7 @@ Possible permission categories may include:
 * Access sensitive project information
 * Other project-specific capabilities
 
-The permission model should be extensible as StartupHub grows.
+The permission model should be extensible as UpWeGo grows.
 
 ---
 
@@ -470,7 +470,7 @@ A milestone should contain:
 
 Milestones should provide a simple way to understand project progress.
 
-StartupHub does not require a complex enterprise Gantt-chart system.
+UpWeGo does not require a complex enterprise Gantt-chart system.
 
 The focus is practical project progress tracking.
 
@@ -553,7 +553,7 @@ This should reduce the need to search across different areas of the application.
 
 # 22. Quotation Management
 
-StartupHub should provide a professional quotation builder.
+UpWeGo should provide a professional quotation builder.
 
 Quotations are business documents, not a sales pipeline.
 
@@ -622,7 +622,7 @@ The quotation should calculate:
 
 # 24. Quotation Templates
 
-StartupHub should provide a small collection of professional quotation templates.
+UpWeGo should provide a small collection of professional quotation templates.
 
 Initial template styles may include:
 
@@ -669,7 +669,7 @@ Generated files should not unnecessarily remain permanently stored when on-deman
 
 # 27. Payment Tracking
 
-StartupHub includes simple manual payment tracking.
+UpWeGo includes simple manual payment tracking.
 
 It is not intended to replace full accounting software.
 
@@ -706,7 +706,7 @@ The system should remain flexible enough to support additional methods later.
 
 # 29. Payment Calculations
 
-StartupHub should use payment records to provide useful business information such as:
+UpWeGo should use payment records to provide useful business information such as:
 
 * Total project value
 * Amount received
@@ -714,7 +714,7 @@ StartupHub should use payment records to provide useful business information suc
 
 These calculations should be based on recorded business data.
 
-StartupHub should not present itself as a complete accounting system.
+UpWeGo should not present itself as a complete accounting system.
 
 ---
 
@@ -735,7 +735,7 @@ The architecture should allow future support for safer reversible operations suc
 
 # 31. Dashboard
 
-StartupHub should provide a business dashboard.
+UpWeGo should provide a business dashboard.
 
 The dashboard should provide a useful operational overview rather than simply displaying decorative statistics.
 
@@ -780,7 +780,7 @@ Users should not see information they are not authorized to access.
 
 # 32. Activity and Audit Logging
 
-StartupHub should maintain records of important sensitive actions.
+UpWeGo should maintain records of important sensitive actions.
 
 Audit logging should cover actions such as:
 
@@ -811,7 +811,7 @@ Audit logs must never contain secrets such as passwords, private tokens, or sens
 
 # 33. Search and Filtering
 
-StartupHub should provide useful search and filtering capabilities throughout the application.
+UpWeGo should provide useful search and filtering capabilities throughout the application.
 
 Users should be able to find relevant:
 
@@ -830,7 +830,7 @@ The goal is to make the system useful even as the organization accumulates a lar
 
 # 34. Notifications and Alerts
 
-StartupHub should be designed to support notifications and reminders.
+UpWeGo should be designed to support notifications and reminders.
 
 Relevant future/ongoing notification use cases include:
 
@@ -870,7 +870,7 @@ Branding should be used in professional documents such as quotations.
 
 # 36. File and Document Support
 
-StartupHub should be capable of supporting business-related files where appropriate.
+UpWeGo should be capable of supporting business-related files where appropriate.
 
 Potential file categories include:
 
@@ -889,7 +889,7 @@ Files should not be publicly exposed by default.
 
 Security is a fundamental product requirement.
 
-StartupHub should use:
+UpWeGo should use:
 
 * Secure authentication
 * Server-side authorization
@@ -912,7 +912,7 @@ A user must not be able to access another organization's data by manipulating re
 
 # 38. Multi-Tenant SaaS Architecture
 
-StartupHub should be capable of supporting multiple organizations.
+UpWeGo should be capable of supporting multiple organizations.
 
 The fundamental data model should therefore understand:
 
@@ -931,7 +931,7 @@ The initial deployment may serve a small number of organizations, but the produc
 
 # 39. Roles and Permissions
 
-StartupHub should support role-based and resource-level authorization.
+UpWeGo should support role-based and resource-level authorization.
 
 Initial roles:
 
@@ -985,7 +985,7 @@ The exact database implementation may evolve as the product is developed, but th
 
 # 41. User Experience
 
-StartupHub should feel like a professional business application.
+UpWeGo should feel like a professional business application.
 
 The experience should prioritize:
 
@@ -1007,7 +1007,7 @@ The PRD does not prescribe a specific visual implementation.
 
 # 42. Responsive Design
 
-StartupHub should work across:
+UpWeGo should work across:
 
 * Desktop
 * Laptop
@@ -1020,7 +1020,7 @@ The primary business workflow may be desktop-oriented, but important functionali
 
 # 43. Performance
 
-StartupHub should remain responsive as the amount of organizational data increases.
+UpWeGo should remain responsive as the amount of organizational data increases.
 
 The application should use appropriate:
 
@@ -1038,7 +1038,7 @@ Performance optimizations should be based on actual requirements rather than pre
 
 # 44. Extensibility
 
-StartupHub should be designed so additional functionality can be added later.
+UpWeGo should be designed so additional functionality can be added later.
 
 Potential future capabilities may include:
 
@@ -1054,7 +1054,7 @@ Potential future capabilities may include:
 * Automated notifications
 * Advanced reporting
 * Document management
-* Subscription billing for StartupHub itself
+* Subscription billing for UpWeGo itself
 * Additional organization roles
 * Custom permissions
 * Additional quotation/document templates
@@ -1065,7 +1065,7 @@ These possibilities should influence architecture where reasonable, but should n
 
 # 45. SaaS Direction
 
-StartupHub is intended to eventually become a SaaS product.
+UpWeGo is intended to eventually become a SaaS product.
 
 The long-term SaaS model may include:
 
@@ -1155,7 +1155,7 @@ The database should not be treated as a rigid specification if implementation re
 
 # 48. Success Criteria
 
-StartupHub should successfully allow a small digital agency to manage its core operations without relying on multiple disconnected systems for everyday work.
+UpWeGo should successfully allow a small digital agency to manage its core operations without relying on multiple disconnected systems for everyday work.
 
 A successful implementation should allow an organization to:
 
@@ -1182,7 +1182,7 @@ A successful implementation should allow an organization to:
 
 # 49. Definition of the Product
 
-StartupHub can be summarized as:
+UpWeGo can be summarized as:
 
 > **A centralized business operating platform for digital agencies and small service-based businesses that connects clients, projects, teams, tasks, quotations, payments, and operational information in one secure workspace.**
 
@@ -1200,13 +1200,13 @@ without maintaining separate disconnected systems.
 
 # 50. Product Vision
 
-The long-term vision for StartupHub is to become a practical operating system for small service businesses.
+The long-term vision for UpWeGo is to become a practical operating system for small service businesses.
 
 Instead of asking:
 
 > "Where did we store that information?"
 
-the business should be able to open StartupHub and find it.
+the business should be able to open UpWeGo and find it.
 
 Instead of managing:
 
@@ -1218,7 +1218,7 @@ Instead of managing:
 
 the business should have one connected source of operational truth.
 
-StartupHub should make running a small agency more organized, transparent, and manageable.
+UpWeGo should make running a small agency more organized, transparent, and manageable.
 
 ---
 
@@ -1226,7 +1226,7 @@ StartupHub should make running a small agency more organized, transparent, and m
 
 This document defines the intended product.
 
-It describes **what StartupHub should ultimately be and what problems it should solve**.
+It describes **what UpWeGo should ultimately be and what problems it should solve**.
 
 It is not an implementation schedule.
 

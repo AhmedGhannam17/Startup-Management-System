@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'StartupHub',
-    template: '%s | StartupHub',
+    default: 'UpWeGo',
+    template: '%s | UpWeGo',
   },
   description:
     'A centralized business management platform for digital agencies and small service-based businesses.',

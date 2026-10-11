@@ -86,9 +86,9 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">S</span>
+            <span className="text-sm font-bold text-primary-foreground">U</span>
           </div>
-          <span className="text-lg font-semibold tracking-tight">StartupHub</span>
+          <span className="text-lg font-semibold tracking-tight">UpWeGo</span>
         </Link>
       </div>
 
@@ -184,7 +184,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
 
       {/* Footer Info */}
       <div className="border-t p-4 text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">StartupHub Foundation</p>
+        <p className="font-medium text-foreground">UpWeGo Foundation</p>
         <p className="mt-0.5">Phase 2: Organization & Team</p>
       </div>
     </aside>

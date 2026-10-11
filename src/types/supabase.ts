@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type OrganizationRole = 'owner' | 'project_manager' | 'employee'
 export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked'
@@ -36,12 +30,12 @@ export interface Database {
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
+            foreignKeyName: 'profiles_id_fkey'
+            columns: ['id']
             isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
         ]
       }
       organizations: {
@@ -121,19 +115,19 @@ export interface Database {
         }
         Relationships: [
           {
-            foreignKeyName: "organization_members_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: 'organization_members_organization_id_fkey'
+            columns: ['organization_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "organization_members_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'organization_members_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
         ]
       }
       organization_invitations: {
@@ -177,12 +171,12 @@ export interface Database {
         }
         Relationships: [
           {
-            foreignKeyName: "organization_invitations_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: 'organization_invitations_organization_id_fkey'
+            columns: ['organization_id']
             isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          }
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
         ]
       }
     }
@@ -190,18 +184,6 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      is_org_member: {
-        Args: { org_id: string }
-        Returns: boolean
-      }
-      is_org_owner: {
-        Args: { org_id: string }
-        Returns: boolean
-      }
-      is_org_admin: {
-        Args: { org_id: string }
-        Returns: boolean
-      }
       get_invitation_by_token: {
         Args: { p_token_hash: string }
         Returns: Array<{

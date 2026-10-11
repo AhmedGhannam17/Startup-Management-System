@@ -6,16 +6,16 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/server'
 import {
   createOrganizationSchema,
+  switchOrganizationSchema,
   updateOrganizationSchema,
   updateMemberRoleSchema,
 } from '@/lib/validations/organization'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 
-const ACTIVE_ORG_COOKIE = 'startuphub_active_org_id'
+const ACTIVE_ORG_COOKIE = 'upwego_active_org_id'
 
 export type ActionResult<T = unknown> =
-  | { success: true; message?: string; data?: T }
-  | { success: false; error: string }
+  { success: true; message?: string; data?: T } | { success: false; error: string }
 
 /**
  * Creates a slug from organization name.
@@ -32,7 +32,9 @@ function slugify(text: string): string {
 /**
  * Create a new organization and assign current user as Owner.
  */
-export async function createOrganization(formData: FormData): Promise<ActionResult<{ orgId: string }>> {
+export async function createOrganization(
+  formData: FormData
+): Promise<ActionResult<{ orgId: string }>> {
   const rawData = {
     name: formData.get('name') as string,
     email: (formData.get('email') as string) || undefined,
@@ -113,7 +115,12 @@ export async function createOrganization(formData: FormData): Promise<ActionResu
 
   // Set active org cookie
   const cookieStore = await cookies()
-  cookieStore.set(ACTIVE_ORG_COOKIE, org.id, { path: '/' })
+  cookieStore.set(ACTIVE_ORG_COOKIE, org.id, {
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')
@@ -171,9 +178,39 @@ export async function updateOrganization(formData: FormData): Promise<ActionResu
 /**
  * Switch active organization context cookie.
  */
-export async function switchActiveOrganization(orgId: string): Promise<void> {
+export async function switchActiveOrganization(orgId: string): Promise<ActionResult> {
+  const parsed = switchOrganizationSchema.safeParse({ organizationId: orgId })
+  if (!parsed.success) {
+    return { success: false, error: 'Invalid organization' }
+  }
+
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Authentication required' }
+  }
+
+  const { data: membership, error } = await supabase
+    .from('organization_members')
+    .select('organization_id')
+    .eq('organization_id', parsed.data.organizationId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (error || !membership) {
+    return { success: false, error: 'Organization access denied' }
+  }
+  const verifiedMembership = membership as unknown as { organization_id: string }
+
   const cookieStore = await cookies()
-  cookieStore.set(ACTIVE_ORG_COOKIE, orgId, { path: '/' })
+  cookieStore.set(ACTIVE_ORG_COOKIE, verifiedMembership.organization_id, {
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }
@@ -219,7 +256,8 @@ export async function updateMemberRole(formData: FormData): Promise<ActionResult
       if (target?.role === 'owner') {
         return {
           success: false,
-          error: 'Cannot demote the only Owner of the organization. Promote another member to Owner first.',
+          error:
+            'Cannot demote the only Owner of the organization. Promote another member to Owner first.',
         }
       }
     }

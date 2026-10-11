@@ -1,14 +1,14 @@
-# StartupHub — AI Development Rules
+# UpWeGo — AI Development Rules
 
 ## 1. Source of Truth
 
-StartupHub's product requirements are defined in:
+UpWeGo's product requirements are defined in:
 
-`docs/prd.md`
+`docs/PRD.md`
 
 Always read the PRD before implementing a new product feature.
 
-The PRD defines what StartupHub is and what the finished product should provide.
+The PRD defines what UpWeGo is and what the finished product should provide.
 
 Development prompts define what should be implemented at a particular point in development.
 
@@ -18,7 +18,7 @@ Do not modify the PRD simply because development is progressing from one feature
 
 ## 2. Project
 
-StartupHub is a SaaS-ready business management platform for digital agencies and small service-based businesses.
+UpWeGo is a SaaS-ready business management platform for digital agencies and small service-based businesses.
 
 The product connects:
 
@@ -124,7 +124,7 @@ Sensitive operations should respect the application's permission model.
 
 ## 7. Multi-Tenant Design
 
-StartupHub is designed to support multiple organizations.
+UpWeGo is designed to support multiple organizations.
 
 Do not design business data as if there will permanently be only one organization.
 
@@ -149,6 +149,8 @@ When creating database structures:
 * Consider organization isolation.
 * Use RLS for appropriate tables.
 * Avoid storing redundant data without a reason.
+
+When a schema, function, trigger, grant, or RLS policy change is needed, create a new migration under `supabase/migrations/` with `supabase migration new <descriptive_name>`; do not overwrite the baseline migration. Tell the project owner clearly when the SQL file is ready for them to apply. Do not change the connected Supabase database as part of a review.
 
 Do not create database structures for functionality that has not been requested.
 
@@ -260,7 +262,7 @@ Do not commit secrets.
 
 ## 15. Product Scope
 
-The PRD defines the overall StartupHub product.
+The PRD defines the overall UpWeGo product.
 
 A development task should implement only the functionality explicitly requested in that task.
 
@@ -324,7 +326,7 @@ Ask for clarification when a decision would materially change:
 
 ## 19. Final Principle
 
-Build StartupHub as if it will be used by real businesses.
+Build UpWeGo as if it will be used by real businesses.
 
 Keep the implementation:
 

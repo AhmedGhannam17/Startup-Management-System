@@ -17,7 +17,8 @@ export interface OrganizationContext {
   }>
 }
 
-const ACTIVE_ORG_COOKIE = 'startuphub_active_org_id'
+const ACTIVE_ORG_COOKIE = 'upwego_active_org_id'
+const LEGACY_ACTIVE_ORG_COOKIE = 'startuphub_active_org_id'
 
 /**
  * Gets all organizations that the current authenticated user belongs to.
@@ -32,10 +33,12 @@ export async function getUserOrganizations() {
 
   const { data, error } = await supabase
     .from('organization_members')
-    .select(`
+    .select(
+      `
       role,
       organization:organizations(*)
-    `)
+    `
+    )
     .eq('user_id', user.id)
 
   if (error || !data) {
@@ -68,7 +71,8 @@ export async function getActiveOrganizationContext(): Promise<OrganizationContex
   if (userOrgs.length === 0) return null
 
   const cookieStore = await cookies()
-  const activeOrgIdCookie = cookieStore.get(ACTIVE_ORG_COOKIE)?.value
+  const activeOrgIdCookie =
+    cookieStore.get(ACTIVE_ORG_COOKIE)?.value ?? cookieStore.get(LEGACY_ACTIVE_ORG_COOKIE)?.value
 
   let activeItem = userOrgs.find((item) => item.organization.id === activeOrgIdCookie)
   if (!activeItem) {

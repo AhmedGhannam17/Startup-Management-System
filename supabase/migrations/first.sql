@@ -1,4 +1,4 @@
--- StartupHub Phase 2 Database Schema & RLS Policies
+-- UpWeGo Phase 2 Database Schema & RLS Policies
 -- Organization and Team Management Foundation
 
 -- Enable UUID extension if not enabled

@@ -8,16 +8,8 @@ export const createOrganizationSchema = z.object({
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().max(30, 'Phone number is too long').optional().or(z.literal('')),
   address: z.string().max(200, 'Address is too long').optional().or(z.literal('')),
-  website: z
-    .string()
-    .url('Invalid website URL')
-    .optional()
-    .or(z.literal('')),
-  businessDescription: z
-    .string()
-    .max(500, 'Description is too long')
-    .optional()
-    .or(z.literal('')),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  businessDescription: z.string().max(500, 'Description is too long').optional().or(z.literal('')),
   taxId: z.string().max(50, 'Tax ID is too long').optional().or(z.literal('')),
   currency: z.string().min(3, 'Currency code required').max(3, 'Use 3-letter code (e.g. USD)'),
 })
@@ -35,6 +27,10 @@ export const inviteMemberSchema = z.object({
 export const updateMemberRoleSchema = z.object({
   memberId: z.string().uuid('Invalid member ID'),
   role: z.enum(['owner', 'project_manager', 'employee']),
+})
+
+export const switchOrganizationSchema = z.object({
+  organizationId: z.string().uuid('Invalid organization'),
 })
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>

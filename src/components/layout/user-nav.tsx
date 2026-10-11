@@ -53,7 +53,7 @@ export function UserNav({ user, orgName, role }: UserNavProps) {
           <Avatar className="h-9 w-9">
             <AvatarImage src={user.user_metadata?.avatar_url} alt={fullName} />
             <AvatarFallback className="bg-primary/10 font-medium text-primary">
-              {initials || 'SH'}
+              {initials || 'UW'}
             </AvatarFallback>
           </Avatar>
         </Button>
