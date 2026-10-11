@@ -48,13 +48,11 @@ const navItems: NavItem[] = [
     title: 'Clients',
     href: '/clients',
     icon: Building2,
-    disabled: true,
   },
   {
     title: 'Projects',
     href: '/projects',
     icon: Briefcase,
-    disabled: true,
   },
   {
     title: 'Tasks',
@@ -129,7 +127,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
             if (item.disabled) {
               return (
@@ -185,7 +183,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
       {/* Footer Info */}
       <div className="border-t p-4 text-xs text-muted-foreground">
         <p className="font-medium text-foreground">UpWeGo Foundation</p>
-        <p className="mt-0.5">Phase 2: Organization & Team</p>
+        <p className="mt-0.5">Phase 3: Clients & Projects</p>
       </div>
     </aside>
   )

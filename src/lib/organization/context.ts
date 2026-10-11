@@ -93,7 +93,7 @@ export async function getActiveOrganizationContext(): Promise<OrganizationContex
   return {
     organization: activeItem.organization,
     membership,
-    role: membership.role,
+    role: membership.role as OrganizationRole,
     isOwner: membership.role === 'owner',
     isManager: membership.role === 'owner' || membership.role === 'project_manager',
     userOrganizations: userOrgs,

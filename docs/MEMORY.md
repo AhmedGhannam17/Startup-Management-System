@@ -2,35 +2,39 @@
 
 **Last reviewed:** 2026-10-11
 
-## Handoff summary
+## Handoff
 
-Phase 2 organization and team flows were manually tested by the project owner. Their end-to-end flows were not rerun after hardening; lint, build, and live database security checks were run. Phase 3 remains unstarted. Read [PRD.md](./PRD.md) for product scope, [ARCHITECTURE.md](./ARCHITECTURE.md) for architecture and current Supabase state, and [TASK.md](./TASK.md) for remaining setup.
+Phase 3 client/project database migrations are applied to UpWeGo - Development, and workspace routes/server actions are implemented. TypeScript, lint, build, and formatting checks pass. Treat Phase 3 as implemented but **not integration verified/release ready**: authenticated application workflows/cross-tenant tests and Phase 1/2 account regressions have not run. See [TASK.md](./TASK.md) for exact open checks and [ARCHITECTURE.md](./ARCHITECTURE.md) for current schema/access rules.
 
-## Durable decisions and constraints
+## Durable decisions
 
-- Product name is **UpWeGo**. The product requirements were renamed in place; their feature scope was not reduced or rewritten.
-- Keep the planned stack: Next.js, React, TypeScript, Tailwind, shadcn-style UI, Supabase/PostgreSQL/Auth/RLS, and Zod.
-- Keep a modular monolith. The current code uses App Router pages and server actions, with server actions calling Supabase directly. Add a separate service/repository layer only when real duplication or complexity justifies it.
-- Treat the PRD as product authority and `TASK.md` as the delivery sequence. Do not start a later phase until requested.
-- Enforce authentication and authorization on the server and in RLS. A selected organization cookie is a preference and must never be treated as proof of membership.
-- For any schema or RLS change, create a new file under `supabase/migrations/` using `supabase migration new <descriptive_name>`; do not overwrite `first.sql`. Review it before applying to the intended development database, then confirm the recorded version and align the local filename.
-- Never put service-role credentials in client code or `.env.example`. Current application code uses `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` only.
-- Build a deliberate, accessible business UI that fits real workflows. Do not add decorative placeholder metrics or generic screens in place of working product behavior.
+- Product name is **UpWeGo**. [PRD.md](./PRD.md) remains the product authority and should not be narrowed to match implementation progress.
+- Keep Next.js App Router, React, TypeScript strict, Tailwind, shadcn-style/Radix UI, Supabase/PostgreSQL/Auth/RLS, and Zod. Keep a modular monolith; actions use the authenticated Supabase session client.
+- Organization context is derived from signed-in membership. Never trust client-supplied organization IDs, roles, or permissions.
+- Client contact data is readable to organization members; client tax IDs/internal notes are separately stored for Owner/Project Manager access.
+- Organization-wide projects are visible to organization members. Restricted projects require an assigned view permission, with Owner access. Project edits, team management, visibility, and private fields have separate checks. Sensitive project data is stored in `project_private_details` with RLS.
+- Tenant integrity uses composite organization foreign keys. Project deletion cascades to its members/details; client deletion is restricted while projects reference it. Archive clients to preserve relationships/history.
+- For schema/RLS changes, add timestamped migration files under `supabase/migrations/`, preserve `first.sql`, review before apply, record the exact remote migration version in the filename, and tell the owner which environment received it. Do not make untracked DB changes.
+- Never use a service-role credential in browser code or docs. Do not commit secrets.
 
-## Latest Supabase verification
+## Phase 3 migrations and database
 
-- Three reviewed hardening migrations are applied to UpWeGo - Development: least-privilege table grants and authenticated policy roles, fixed function search paths and grants, and RLS helpers moved into a non-exposed `private` schema.
-- Live checks confirm anon/PUBLIC have no grants on the four tables; authenticated has only Phase 2 operations. Trigger functions cannot be called through the API; intended invitation RPCs remain in public.
-- The original baseline execution history cannot be proven. The three hardening migration filenames now match the remote ledger versions.
-- `npm run lint` passed. `npm run build` passed after fixing a type error found in organization-switch membership validation. There is no automated test suite; owner-reported flows were not repeated.
-- Organization switching verifies membership server-side. The active-organization cookie is HttpOnly/SameSite=Lax and Secure in production; legacy cookie values remain readable.
-- Manual Phase 2 results are owner-reported; invitation links are shared manually and email delivery is not implemented.
+- `20261011170350_phase3_clients_projects.sql` applied to `zuwtrchxgbipurwslusy` (UpWeGo - Development): `clients`, `client_private_details`, `projects`, `project_members`, `project_private_details`, constraints, indexes, RLS, helper functions, and least grants.
+- `20261011170600_phase3_project_access_controls.sql` applied to Development: corrected sensitive access predicates and atomically adds the creator's scoped project-member row.
+- `first.sql` was not changed. No existing client/project data existed to migrate or delete.
+- Supabase advisor showed no Phase 3 security finding. Existing notices: invitation preview/acceptance RPCs are executable as designed; leaked-password protection is disabled. Performance notice: `organization_invitations.invited_by` lacks an index; Phase 3 indexes report unused because the new tables have no representative rows.
 
-## Handoff maintenance
+## Code and verification status
 
-After each meaningful feature, bug fix, or architectural change:
+- Added client/project routes under `src/app/(app)/clients` and `projects`, actions in `src/app/actions/clients-projects.ts`, Zod schemas in `src/lib/validations`, and shared record form UI.
+- Sidebar navigation is active; dashboard client/project counts query persisted RLS-filtered records.
+- `npm run lint` completed with the Next.js `next lint` deprecation notice.
+- The first build exposed `never` inference on new generated table queries. A strict typed server-query surface based on local row/insert/update declarations resolved it; `npx tsc --noEmit` and `npm run build` now pass without `any` or compiler suppression.
+- `npm run lint` passes with the existing Next.js `next lint` deprecation message. Prettier checks pass.
+- No test runner exists. No app-backed Phase 3 test, authorization matrix, or live cross-organization query test was completed. Existing owner-reported Phase 2 flows were not rerun; no test account credentials were available through the connected database tools.
 
-1. Update progress and outstanding work in `TASK.md`.
-2. Update `ARCHITECTURE.md` if the actual structure, stack, data model, or security boundary changes.
-3. Keep only durable decisions and the latest handoff point here; keep granular progress in `TASK.md`.
-4. Keep `PRD.md` stable unless product requirements themselves are explicitly changed.
+## Continue safely
+
+1. Use authenticated test accounts to verify client create/edit/search/archive, project status/client/visibility/member controls, and Owner/PM/Employee access including a second organization. Rerun auth, org creation, and invite acceptance/rejection/revocation/expiry flows.
+2. If a schema fix is required, create and review another timestamped migration; never patch Development directly and never rewrite `first.sql`.
+3. Update [TASK.md](./TASK.md), [ARCHITECTURE.md](./ARCHITECTURE.md), and this file with actual check outcomes. Phase 4 is not started until the owner requests it.

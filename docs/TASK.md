@@ -54,18 +54,26 @@ This tracker separates code already present from the full product defined in [PR
 - [x] Invitation email is not sent; owner shares the generated link manually.
 - [ ] Add automated regression tests; this repository currently has no test runner or test suite.
 
-The owner-reported organization and invitation flows were not independently rerun with test accounts. Live grant, policy-role, function-ACL, fixed-search-path, and Supabase-advisor checks were executed after the migrations. See [ARCHITECTURE.md](./ARCHITECTURE.md) for results. Phase 3 remains **not started**; no client/project work has begun.
+The owner-reported organization and invitation flows were not independently rerun with test accounts. Live grant, policy-role, function-ACL, fixed-search-path, and Supabase-advisor checks were executed after the migrations. See [ARCHITECTURE.md](./ARCHITECTURE.md) for results. Phase 3 implementation is tracked below.
 
 Remaining Phase 2 follow-ups are leaked-password protection in Supabase Auth, baseline-ledger reproducibility, and test coverage. The connected Supabase tool did not expose Auth settings controls.
 
 ## Phase 3 — Clients and projects
 
-**Status: Not started**
+**Status: Implemented; verification incomplete**
 
-- [ ] Design organization-scoped client and project schema, constraints, indexes, and RLS from the PRD.
-- [ ] Implement client create/read/update/archive/search workflows.
-- [ ] Implement projects, statuses/priorities/dates, client links, technical/internal fields, and assigned members.
-- [ ] Define and implement organization-wide versus restricted project visibility and per-project permissions.
+- [x] Add organization-scoped clients and projects, private-detail tables, project membership permissions, composite tenant foreign keys, checks, and query indexes through incremental migrations.
+- [x] Apply both Phase 3 migrations to UpWeGo - Development; preserve `first.sql` and existing rows.
+- [x] Implement client creation, listing, detail, edit, archive/restore, name search, and category/archive filters. Restrict client tax IDs and internal notes to Owners and Project Managers.
+- [x] Implement project creation, listing, detail, editing, status, priority, dates, client association, technical/internal details, visibility, and member permission assignment.
+- [x] Enforce organization-wide/restricted project visibility and sensitive-detail access in RLS, with matching server-side action checks.
+- [x] Use persisted client/project counts for dashboard metrics and enable their navigation routes.
+- [x] Add a typed server-query surface for the new table declarations and pass TypeScript/build checks without `any` or compiler suppressions.
+- [ ] Exercise create/edit/archive/project assignment flows and owner/PM/employee/cross-organization boundaries using authenticated test accounts.
+- [ ] Rerun the existing Phase 1/2 authentication, organization, and invitation flows using test accounts.
+- [ ] Add automated regression tests when the repository test runner is selected.
+
+**Verification to date:** migrations are recorded in the Development migration ledger, all nine public tables have RLS enabled, Phase 3 policy roles were checked, and security/performance advisors were reviewed. `npx tsc --noEmit`, `npm run build`, `npm run lint`, and Prettier formatting checks completed successfully (lint emits the existing Next.js `next lint` deprecation notice). No app-backed end-to-end Phase 3 flow, live cross-organization access assertion, or Phase 1/2 account flow was run in this turn. Do not treat Phase 3 as release ready until the open integration checks pass.
 
 ## Phase 4 — Tasks and milestones
 
@@ -90,7 +98,7 @@ Remaining Phase 2 follow-ups are leaked-password protection in Supabase Auth, ba
 **Status: In progress (dashboard shell only)**
 
 - [x] Dashboard shell with organization and team-member count.
-- [ ] Replace hard-coded client/project/revenue metrics with permission-filtered persisted data.
+- [x] Replace client/project metrics with persisted, RLS-filtered data. Revenue remains a Phase 5 placeholder.
 - [ ] Add relevant project/task deadlines and recent activity.
 - [ ] Add search and filtering across implemented business modules.
 - [ ] Add notifications/reminders after the related business events and delivery approach are defined.

@@ -29,13 +29,17 @@ export default async function DashboardPage() {
 
   // Fetch count of team members if org is active
   let memberCount = 0
+  let clientCount = 0
+  let projectCount = 0
   if (orgContext?.organization) {
-    const { count } = await supabase
-      .from('organization_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('organization_id', orgContext.organization.id)
-
-    memberCount = count || 0
+    const [members, clients, projects] = await Promise.all([
+      supabase.from('organization_members').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id),
+      supabase.from('clients').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id).is('archived_at', null),
+      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id).not('status', 'in', '(completed,cancelled)'),
+    ])
+    memberCount = members.count || 0
+    clientCount = clients.count || 0
+    projectCount = projects.count || 0
   }
 
   return (
@@ -90,8 +94,8 @@ export default async function DashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Module ready for Phase 3</p>
+            <div className="text-2xl font-bold">{projectCount}</div>
+            <p className="text-xs text-muted-foreground">Active projects visible to you</p>
           </CardContent>
         </Card>
 
@@ -101,8 +105,8 @@ export default async function DashboardPage() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Module ready for Phase 3</p>
+            <div className="text-2xl font-bold">{clientCount}</div>
+            <p className="text-xs text-muted-foreground">Active client records</p>
           </CardContent>
         </Card>
 
