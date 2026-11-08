@@ -11,6 +11,19 @@ export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
   const pathname = request.nextUrl.pathname
 
+  // The root route only redirects based on Auth state. Make that decision in
+  // the request that already verified the user instead of making the root page
+  // perform the same network Auth lookup again.
+  if (pathname === '/') {
+    const redirectResponse = NextResponse.redirect(
+      new URL(user ? '/dashboard' : '/login', request.url)
+    )
+    supabaseResponse.cookies.getAll().forEach(({ name, value, ...options }) => {
+      redirectResponse.cookies.set(name, value, options)
+    })
+    return redirectResponse
+  }
+
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route))
 

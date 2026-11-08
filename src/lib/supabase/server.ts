@@ -1,6 +1,7 @@
 import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
+import { cache } from 'react'
 import type { PostgrestError } from '@supabase/postgrest-js'
 import type { Database } from '@/types/supabase'
 
@@ -69,6 +70,19 @@ export async function createServerClient() {
     }
   )) as unknown as TypedServerClient
 }
+
+/**
+ * Verifies the signed-in user once per server render/request. Server components
+ * in the same render can share this result instead of repeating an Auth call.
+ */
+export const getCurrentUser = cache(async () => {
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  return user
+})
 
 /**
  * Creates a database-only client whose PostgREST requests use a verified

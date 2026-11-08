@@ -1,6 +1,6 @@
 # UpWeGo Architecture
 
-**Status:** Current code and connected Development database as checked on 2026-10-11. Product scope remains in [PRD.md](./PRD.md); progress and open verification are in [TASK.md](./TASK.md).
+**Status:** Current code and connected Development database as checked on 2026-11-08. Product scope remains in [PRD.md](./PRD.md); progress and open verification are in [TASK.md](./TASK.md).
 
 ## System overview
 
@@ -33,8 +33,8 @@ Dependency ranges are recorded in `package.json`. The app uses public Supabase U
 
 ## Request and authorization flow
 
-1. Middleware refreshes Supabase sessions; the authenticated `(app)` layout checks the current user.
-2. `getActiveOrganizationContext()` accepts the active-org cookie only when the user is a current member.
+1. Middleware refreshes Supabase sessions; server components share one request-scoped verified user lookup through React `cache`.
+2. `getActiveOrganizationContext()` loads the signed-in user's memberships and related organizations in one query, then accepts the active-org cookie only when it matches a current membership.
 3. Server actions parse form input with Zod, derive organization and actor IDs from authenticated context, and check project permissions before mutation. Project creation generates its UUID server-side and inserts without `RETURNING`: PostgREST's `INSERT ... RETURNING` also applies the SELECT policy, and the project visibility helper cannot see the not-yet-visible row within that same statement.
 4. RLS policies independently scope records to the current organization and authorized project membership. Composite tenant foreign keys prevent cross-organization relationships.
 5. Sensitive client and project data are in separate tables with stricter RLS, so hiding a field in the UI is not the security boundary.
@@ -50,6 +50,8 @@ Dependency ranges are recorded in `package.json`. The app uses public Supabase U
 | `/projects`, `/projects/new`, `/projects/[id]`, `/projects/[id]/edit`          | Project list/filter, create/edit, team assignment and per-project access                                  |
 
 Tasks, milestones, quotations, payments, notifications, and audit history remain future work. Invitation email delivery is not implemented; owners share links manually.
+
+Workspace routes use `src/app/(app)/loading.tsx` to show a persistent skeleton under the shared sidebar while server-rendered page data loads. Independent Team-page member and invitation queries run concurrently.
 
 ## Data model
 

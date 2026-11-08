@@ -1,21 +1,14 @@
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { UserNav } from '@/components/layout/user-nav'
 import { Badge } from '@/components/ui/badge'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [user, orgContext] = await Promise.all([getCurrentUser(), getActiveOrganizationContext()])
 
-  if (!user) {
-    redirect('/login')
-  }
-
-  const orgContext = await getActiveOrganizationContext()
+  if (!user) redirect('/login')
 
   return (
     <div className="flex min-h-screen bg-muted/20">
@@ -31,17 +24,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               UpWeGo Workspace
             </h1>
             {orgContext?.organization && (
-              <Badge variant="outline" className="text-xs capitalize font-normal">
+              <Badge variant="outline" className="text-xs font-normal capitalize">
                 {orgContext.organization.name}
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-4">
-            <UserNav
-              user={user}
-              orgName={orgContext?.organization.name}
-              role={orgContext?.role}
-            />
+            <UserNav user={user} orgName={orgContext?.organization.name} role={orgContext?.role} />
           </div>
         </header>
 

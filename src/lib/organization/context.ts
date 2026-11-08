@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/server'
+import { cache } from 'react'
+import { createServerClient, getCurrentUser } from '@/lib/supabase/server'
 import type { Database, OrganizationRole } from '@/types/supabase'
 
 export type Organization = Database['public']['Tables']['organizations']['Row']
@@ -24,18 +25,16 @@ const LEGACY_ACTIVE_ORG_COOKIE = 'startuphub_active_org_id'
  * Gets all organizations that the current authenticated user belongs to.
  */
 export async function getUserOrganizations() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getCurrentUser()
   if (!user) return []
+  const supabase = await createServerClient()
 
   const { data, error } = await supabase
     .from('organization_members')
     .select(
       `
       role,
+      organization_id,
       organization:organizations(*)
     `
     )
@@ -59,43 +58,51 @@ export async function getUserOrganizations() {
  * Resolves the active organization context for the current request.
  * Returns null if the user has no organizations or is not authenticated.
  */
-export async function getActiveOrganizationContext(): Promise<OrganizationContext | null> {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+export const getActiveOrganizationContext = cache(async (): Promise<OrganizationContext | null> => {
+  const user = await getCurrentUser()
   if (!user) return null
+  const supabase = await createServerClient()
 
-  const userOrgs = await getUserOrganizations()
+  // Fetch each membership and its organization together. The previous flow did
+  // separate Auth and membership requests, then fetched the active membership
+  // a second time.
+  const { data: membershipsRaw, error } = await supabase
+    .from('organization_members')
+    .select('*, organization:organizations(*)')
+    .eq('user_id', user.id)
+
+  if (error || !membershipsRaw?.length) return null
+
+  const memberships = membershipsRaw as unknown as Array<
+    OrganizationMember & { organization: Organization | null }
+  >
+  const userOrgs = memberships
+    .filter((membership) => membership.organization !== null)
+    .map((membership) => ({
+      organization: membership.organization as Organization,
+      role: membership.role as OrganizationRole,
+    }))
   if (userOrgs.length === 0) return null
 
   const cookieStore = await cookies()
   const activeOrgIdCookie =
     cookieStore.get(ACTIVE_ORG_COOKIE)?.value ?? cookieStore.get(LEGACY_ACTIVE_ORG_COOKIE)?.value
 
-  let activeItem = userOrgs.find((item) => item.organization.id === activeOrgIdCookie)
-  if (!activeItem) {
-    activeItem = userOrgs[0]
-  }
-
-  const { data: membershipRaw } = await supabase
-    .from('organization_members')
-    .select('*')
-    .eq('organization_id', activeItem.organization.id)
-    .eq('user_id', user.id)
-    .single()
-
-  const membership = membershipRaw as OrganizationMember | null
-
-  if (!membership) return null
+  const availableMemberships = memberships.filter(
+    (item): item is OrganizationMember & { organization: Organization } =>
+      item.organization !== null
+  )
+  const activeMembership =
+    availableMemberships.find((item) => item.organization.id === activeOrgIdCookie) ??
+    availableMemberships[0]
+  const { organization, ...membership } = activeMembership
 
   return {
-    organization: activeItem.organization,
+    organization,
     membership,
     role: membership.role as OrganizationRole,
     isOwner: membership.role === 'owner',
     isManager: membership.role === 'owner' || membership.role === 'project_manager',
     userOrganizations: userOrgs,
   }
-}
+})

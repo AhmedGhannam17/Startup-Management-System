@@ -1,17 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import {
-  Building2,
-  Users,
-  Briefcase,
-  CreditCard,
-  ArrowUpRight,
-  ShieldCheck,
-} from 'lucide-react'
+import { Building2, Users, Briefcase, CreditCard, ArrowUpRight, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getCurrentUser } from '@/lib/supabase/server'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 
 export const metadata: Metadata = {
@@ -19,12 +12,11 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const orgContext = await getActiveOrganizationContext()
+  const [user, orgContext, supabase] = await Promise.all([
+    getCurrentUser(),
+    getActiveOrganizationContext(),
+    createServerClient(),
+  ])
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
 
   // Fetch count of team members if org is active
@@ -33,9 +25,20 @@ export default async function DashboardPage() {
   let projectCount = 0
   if (orgContext?.organization) {
     const [members, clients, projects] = await Promise.all([
-      supabase.from('organization_members').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id),
-      supabase.from('clients').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id).is('archived_at', null),
-      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('organization_id', orgContext.organization.id).not('status', 'in', '(completed,cancelled)'),
+      supabase
+        .from('organization_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgContext.organization.id),
+      supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgContext.organization.id)
+        .is('archived_at', null),
+      supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgContext.organization.id)
+        .not('status', 'in', '(completed,cancelled)'),
     ])
     memberCount = members.count || 0
     clientCount = clients.count || 0
@@ -147,11 +150,15 @@ export default async function DashboardPage() {
               </div>
               <div className="flex justify-between border-b pb-2">
                 <span className="text-muted-foreground">Business Email</span>
-                <span className="font-medium">{orgContext.organization.email || 'Not configured'}</span>
+                <span className="font-medium">
+                  {orgContext.organization.email || 'Not configured'}
+                </span>
               </div>
               <div className="flex justify-between border-b pb-2">
                 <span className="text-muted-foreground">Website</span>
-                <span className="font-medium">{orgContext.organization.website || 'Not configured'}</span>
+                <span className="font-medium">
+                  {orgContext.organization.website || 'Not configured'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Created Date</span>
