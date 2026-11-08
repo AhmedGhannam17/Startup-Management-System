@@ -8,6 +8,7 @@ import { inviteMemberSchema } from '@/lib/validations/organization'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 import type { Database, OrganizationRole } from '@/types/supabase'
 import type { ActionResult } from './organization'
+import { getUserFriendlyDatabaseError } from '@/lib/errors'
 
 const ACTIVE_ORG_COOKIE = 'upwego_active_org_id'
 
@@ -92,7 +93,13 @@ export async function inviteMember(
     .insert(inviteData as unknown as never)
 
   if (inviteError) {
-    return { success: false, error: inviteError.message || 'Failed to create invitation' }
+    return {
+      success: false,
+      error: getUserFriendlyDatabaseError(
+        inviteError,
+        'We couldn’t create the invitation. Please try again.'
+      ),
+    }
   }
 
   const reqHeaders = await headers()
@@ -152,7 +159,13 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
   } as unknown as never)
 
   if (rpcError) {
-    return { success: false, error: rpcError.message }
+    return {
+      success: false,
+      error: getUserFriendlyDatabaseError(
+        rpcError,
+        'We couldn’t accept this invitation. Please check the link and try again.'
+      ),
+    }
   }
 
   // Set active org cookie

@@ -11,6 +11,7 @@ import {
   updateMemberRoleSchema,
 } from '@/lib/validations/organization'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
+import { getUserFriendlyDatabaseError } from '@/lib/errors'
 
 const ACTIVE_ORG_COOKIE = 'upwego_active_org_id'
 
@@ -97,7 +98,13 @@ export async function createOrganization(
   const org = orgRaw as { id: string } | null
 
   if (orgError || !org) {
-    return { success: false, error: orgError?.message || 'Failed to create organization' }
+    return {
+      success: false,
+      error: getUserFriendlyDatabaseError(
+        orgError,
+        'We couldn’t create the organization. Please try again.'
+      ),
+    }
   }
 
   // 2. Insert creator as Owner

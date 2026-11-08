@@ -1,6 +1,6 @@
 import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { PostgrestError } from '@supabase/postgrest-js'
 import type { Database } from '@/types/supabase'
 
@@ -68,4 +68,17 @@ export async function createServerClient() {
       },
     }
   )) as unknown as TypedServerClient
+}
+
+/**
+ * Creates a database-only client whose PostgREST requests use a verified
+ * user's exact access token. This is useful when an action needs to keep the
+ * database identity aligned with the user returned by the SSR Auth client.
+ */
+export function createAccessTokenDataClient(accessToken: string) {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { accessToken: async () => accessToken }
+  ) as unknown as TypedServerClient
 }

@@ -35,7 +35,7 @@ Dependency ranges are recorded in `package.json`. The app uses public Supabase U
 
 1. Middleware refreshes Supabase sessions; the authenticated `(app)` layout checks the current user.
 2. `getActiveOrganizationContext()` accepts the active-org cookie only when the user is a current member.
-3. Server actions parse form input with Zod, derive organization and actor IDs from authenticated context, and check project permissions before mutation.
+3. Server actions parse form input with Zod, derive organization and actor IDs from authenticated context, and check project permissions before mutation. Project creation generates its UUID server-side and inserts without `RETURNING`: PostgREST's `INSERT ... RETURNING` also applies the SELECT policy, and the project visibility helper cannot see the not-yet-visible row within that same statement.
 4. RLS policies independently scope records to the current organization and authorized project membership. Composite tenant foreign keys prevent cross-organization relationships.
 5. Sensitive client and project data are in separate tables with stricter RLS, so hiding a field in the UI is not the security boundary.
 
@@ -59,6 +59,7 @@ The original `supabase/migrations/first.sql` remains untouched. Phase 2 has thre
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `20261011170350_phase3_clients_projects.sql`        | Five RLS-enabled tables, tenant constraints/indexes, RLS policies, fixed-search-path project access helpers and minimum grants |
 | `20261011170600_phase3_project_access_controls.sql` | Corrects sensitive access checks and creates creator membership atomically for newly created projects                          |
+| `20261012141701_project_creator_rls.sql`            | Assigns project creator from database `auth.uid()` and restricts inserts to organization admins through RLS                    |
 
 | Table                      | Role                                                                                            |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -85,6 +86,8 @@ erDiagram
 ```
 
 Composite foreign keys pair every client/project/member reference with `organization_id`; project/client and membership relationships cannot cross tenants. Checks enforce valid status, priority, visibility, project date ordering, nonnegative project value, and sensible permission combinations. Project deletion cascades its members/private details. Client deletion is restricted while projects refer to it; archiving preserves history.
+
+Project creation uses an authenticated Owner or Project Manager RLS check. A `BEFORE INSERT` trigger assigns `created_by` from the database JWT so the application cannot choose another creator.
 
 ## Permission model
 

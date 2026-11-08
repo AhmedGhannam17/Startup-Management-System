@@ -1,11 +1,13 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAccessTokenDataClient, createServerClient } from '@/lib/supabase/server'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 import { clientSchema } from '@/lib/validations/client'
 import { projectSchema } from '@/lib/validations/project'
+import { getUserFriendlyDatabaseError } from '@/lib/errors'
 
 function value(form: FormData, key: string) {
   const item = form.get(key)
@@ -52,7 +54,10 @@ export async function saveClient(form: FormData) {
       .update(payload)
       .eq('id', id)
       .eq('organization_id', context.organization.id)
-    if (error) redirect(`/clients/${id}/edit?error=${encodeURIComponent(error.message)}`)
+    if (error)
+      redirect(
+        `/clients/${id}/edit?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`
+      )
   } else {
     const { data, error } = await supabase
       .from('clients')
@@ -60,9 +65,7 @@ export async function saveClient(form: FormData) {
       .select('id')
       .single()
     if (error || !data)
-      redirect(
-        `/clients/new?error=${encodeURIComponent(error?.message ?? 'Unable to create client')}`
-      )
+      redirect(`/clients/new?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`)
     clientId = data.id
   }
   const { error: privateError } = await supabase.from('client_private_details').upsert({
@@ -73,7 +76,7 @@ export async function saveClient(form: FormData) {
   })
   if (privateError)
     redirect(
-      `/clients/${clientId}/edit?error=${encodeURIComponent('Client saved, but private details could not be saved: ' + privateError.message)}`
+      `/clients/${clientId}/edit?error=${encodeURIComponent(getUserFriendlyDatabaseError(privateError, 'Client saved, but its private details could not be saved.'))}`
     )
   revalidatePath('/clients')
   revalidatePath(`/clients/${clientId}`)
@@ -91,7 +94,8 @@ export async function archiveClient(form: FormData) {
     .update({ archived_at: archived ? null : new Date().toISOString() })
     .eq('id', id)
     .eq('organization_id', context.organization.id)
-  if (error) redirect(`/clients/${id}?error=${encodeURIComponent(error.message)}`)
+  if (error)
+    redirect(`/clients/${id}?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`)
   revalidatePath('/clients')
   revalidatePath(`/clients/${id}`)
   redirect(`/clients/${id}`)
@@ -128,7 +132,39 @@ export async function saveProject(form: FormData) {
     redirect(
       `${id ? `/projects/${id}/edit` : '/projects/new'}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? 'Invalid project')}`
     )
-  const supabase = await createServerClient()
+  const authClient = await createServerClient()
+  const {
+    data: { user },
+  } = await authClient.auth.getUser()
+  if (!user) redirect('/login?error=session-expired')
+  if (user.id !== context.membership.user_id)
+    redirect(
+      '/projects/new?error=Your sign-in session does not match your organization membership. Sign out, sign back in with the Owner account, and try again.'
+    )
+  const {
+    data: { session },
+  } = await authClient.auth.getSession()
+  if (!session) redirect('/login?error=session-expired')
+  if (session.user.id !== user.id)
+    redirect(
+      '/projects/new?error=Your database session belongs to a different account. Refresh the page and sign in again.'
+    )
+  // Verify the actual JWT used by PostgREST. session.user is cached session
+  // metadata; RLS evaluates the token's `sub` claim through auth.uid().
+  let tokenSubject: string | undefined
+  try {
+    const encodedPayload = session.access_token.split('.')[1]
+    tokenSubject = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')).sub
+  } catch {
+    redirect(
+      '/projects/new?error=Your database session is invalid. Refresh the page and try again.'
+    )
+  }
+  if (!tokenSubject || tokenSubject !== user.id)
+    redirect(
+      '/projects/new?error=Your database session does not match your signed-in account. Refresh the page and sign in again.'
+    )
+  const supabase = createAccessTokenDataClient(session.access_token)
   const project = parsed.data
   const payload = {
     name: project.name,
@@ -144,16 +180,36 @@ export async function saveProject(form: FormData) {
   let projectId = id
   if (!id) {
     if (!context.isManager) redirect('/projects?error=forbidden')
-    const { data, error } = await supabase
-      .from('projects')
-      .insert({ ...payload, organization_id: context.organization.id })
-      .select('id')
-      .single()
-    if (error || !data)
+    // PostgREST's INSERT ... RETURNING also applies the projects SELECT policy.
+    // That policy's visibility helper reads projects, so the row being inserted
+    // is not visible to the helper inside the same statement. Generate the ID
+    // on the server and insert without RETURNING to avoid that unrelated SELECT.
+    const newProjectId = randomUUID()
+    const { error } = await supabase.from('projects').insert({
+      ...payload,
+      id: newProjectId,
+      organization_id: context.organization.id,
+    })
+    if (error?.code === '42501') {
+      console.error('[projects.create] RLS denied project insert after server authorization', {
+        organizationRole: context.role,
+        activeOrganizationId: context.organization.id,
+        sessionMatchesMembership: user.id === context.membership.user_id,
+        tokenMatchesAuthenticatedUser: tokenSubject === user.id,
+        databaseError: {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        },
+      })
       redirect(
-        `/projects/new?error=${encodeURIComponent(error?.message ?? 'Unable to create project')}`
+        '/projects/new?error=The database could not verify your Owner or Project Manager membership in the active organization. Confirm the correct workspace is selected, then sign out and back into the Owner account.'
       )
-    projectId = data.id
+    }
+    if (error)
+      redirect(`/projects/new?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`)
+    projectId = newProjectId
   } else {
     const { data: existing } = await supabase
       .from('projects')
@@ -179,7 +235,10 @@ export async function saveProject(form: FormData) {
       .update(payload)
       .eq('id', id)
       .eq('organization_id', context.organization.id)
-    if (error) redirect(`/projects/${id}/edit?error=${encodeURIComponent(error.message)}`)
+    if (error)
+      redirect(
+        `/projects/${id}/edit?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`
+      )
   }
   const { data: access } = await supabase
     .from('project_members')
@@ -203,7 +262,10 @@ export async function saveProject(form: FormData) {
       technical_notes: project.technicalNotes || null,
       internal_notes: project.internalNotes || null,
     })
-    if (error) redirect(`/projects/${projectId}/edit?error=${encodeURIComponent(error.message)}`)
+    if (error)
+      redirect(
+        `/projects/${projectId}/edit?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`
+      )
   }
   revalidatePath('/projects')
   revalidatePath(`/projects/${projectId}`)
@@ -287,7 +349,8 @@ export async function saveProjectMembers(form: FormData) {
     const { error } = await supabase
       .from('project_members')
       .upsert(rows, { onConflict: 'organization_id,project_id,user_id' })
-    if (error) redirect(`/projects/${id}?error=${encodeURIComponent(error.message)}`)
+    if (error)
+      redirect(`/projects/${id}?error=${encodeURIComponent(getUserFriendlyDatabaseError(error))}`)
   }
   revalidatePath(`/projects/${id}`)
   redirect(`/projects/${id}`)

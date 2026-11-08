@@ -68,12 +68,14 @@ Remaining Phase 2 follow-ups are leaked-password protection in Supabase Auth, ba
 - [x] Implement project creation, listing, detail, editing, status, priority, dates, client association, technical/internal details, visibility, and member permission assignment.
 - [x] Enforce organization-wide/restricted project visibility and sensitive-detail access in RLS, with matching server-side action checks.
 - [x] Use persisted client/project counts for dashboard metrics and enable their navigation routes.
+- [x] Derive project creator from the authenticated database request and retain Owner/Project Manager-only insert authorization; verify Owner success and Employee denial in rollback-only Development checks.
+- [x] Fix Owner project creation: avoid PostgREST `INSERT ... RETURNING` because it also invokes the project SELECT visibility policy, whose helper cannot see the row being inserted within that same statement. Generate the project UUID server-side and insert without `RETURNING`.
 - [x] Add a typed server-query surface for the new table declarations and pass TypeScript/build checks without `any` or compiler suppressions.
 - [ ] Exercise create/edit/archive/project assignment flows and owner/PM/employee/cross-organization boundaries using authenticated test accounts.
 - [ ] Rerun the existing Phase 1/2 authentication, organization, and invitation flows using test accounts.
 - [ ] Add automated regression tests when the repository test runner is selected.
 
-**Verification to date:** migrations are recorded in the Development migration ledger, all nine public tables have RLS enabled, Phase 3 policy roles were checked, and security/performance advisors were reviewed. `npx tsc --noEmit`, `npm run build`, `npm run lint`, and Prettier formatting checks completed successfully (lint emits the existing Next.js `next lint` deprecation notice). No app-backed end-to-end Phase 3 flow, live cross-organization access assertion, or Phase 1/2 account flow was run in this turn. Do not treat Phase 3 as release ready until the open integration checks pass.
+**Verification to date:** migrations are recorded in the Development migration ledger, all nine public tables have RLS enabled, Phase 3 policy roles were checked, and security/performance advisors were reviewed. A rolled-back Development SQL reproduction confirmed plain Owner INSERT succeeds, INSERT with RETURNING fails, and Employee INSERT is rejected. `npx tsc --noEmit`, `npm run build`, `npm run lint`, and Prettier formatting checks completed successfully (lint emits the existing Next.js `next lint` deprecation notice). The updated no-RETURNING app action still needs an authenticated browser create/detail check. No live cross-organization access assertion or Phase 1/2 account flow was run in this turn. Do not treat Phase 3 as release ready until the open integration checks pass.
 
 ## Phase 4 — Tasks and milestones
 
