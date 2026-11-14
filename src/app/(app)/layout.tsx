@@ -4,6 +4,7 @@ import { getActiveOrganizationContext } from '@/lib/organization/context'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { UserNav } from '@/components/layout/user-nav'
 import { Badge } from '@/components/ui/badge'
+import { WorkspaceRouteTransition } from '@/components/layout/workspace-route-transition'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, orgContext] = await Promise.all([getCurrentUser(), getActiveOrganizationContext()])
@@ -18,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-x-hidden">
         {/* Top Header Bar */}
-        <header className="flex h-16 items-center justify-between border-b bg-card px-6">
+        <header className="print-workspace-chrome flex h-16 items-center justify-between border-b bg-card px-6">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-semibold tracking-tight text-muted-foreground">
               UpWeGo Workspace
@@ -35,7 +36,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="workspace-main flex-1 p-6 lg:p-8">
+          <WorkspaceRouteTransition>{children}</WorkspaceRouteTransition>
+        </main>
       </div>
     </div>
   )

@@ -15,11 +15,14 @@ export function getUserFriendlyDatabaseError(
       return 'A record with these details already exists.'
     case '23514':
     case '22P02':
+    case '22023':
       return 'Some information is invalid. Review the fields and try again.'
+    case 'P0002':
+      return 'That record could not be found. Refresh the page and try again.'
     case 'PGRST116':
       return 'This record could not be found. It may have been removed or you may no longer have access.'
     case 'P0001':
-      return 'This action could not be completed. The invitation may be invalid, expired, revoked, or already used.'
+      return 'This change could not be completed. The record may have changed or may no longer be available.'
     default:
       return fallback
   }

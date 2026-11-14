@@ -24,7 +24,6 @@ interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
-  disabled?: boolean
   badge?: string
 }
 
@@ -58,19 +57,16 @@ const navItems: NavItem[] = [
     title: 'Tasks',
     href: '/tasks',
     icon: CheckSquare,
-    disabled: true,
   },
   {
     title: 'Quotations',
     href: '/quotations',
     icon: FileText,
-    disabled: true,
   },
   {
     title: 'Payments',
     href: '/payments',
     icon: CreditCard,
-    disabled: true,
   },
 ]
 
@@ -79,7 +75,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
   const activeOrg = organizationContext?.organization
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
+    <aside className="print-workspace-chrome flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
       {/* Brand Header */}
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/dashboard" className="flex items-center gap-2">
@@ -92,15 +88,15 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
 
       {/* Active Organization Switcher / Display */}
       {activeOrg ? (
-        <div className="border-b px-4 py-3 bg-muted/20">
+        <div className="border-b bg-muted/20 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 overflow-hidden">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-primary font-bold text-xs">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">
                 {activeOrg.name.charAt(0).toUpperCase()}
               </div>
               <div className="truncate">
-                <p className="text-xs font-semibold leading-none truncate">{activeOrg.name}</p>
-                <p className="text-[10px] text-muted-foreground capitalize mt-0.5">
+                <p className="truncate text-xs font-semibold leading-none">{activeOrg.name}</p>
+                <p className="mt-0.5 text-[10px] capitalize text-muted-foreground">
                   {organizationContext.role.replace('_', ' ')}
                 </p>
               </div>
@@ -111,7 +107,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
         <div className="border-b px-4 py-3">
           <Link
             href="/onboarding"
-            className="flex items-center gap-2 text-xs text-primary font-medium hover:underline"
+            className="flex items-center gap-2 text-xs font-medium text-primary hover:underline"
           >
             <PlusCircle className="h-4 w-4" />
             Create Organization
@@ -128,24 +124,6 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-
-            if (item.disabled) {
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
-                  title="Coming in upcoming development phases"
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </div>
-                  <span className="text-[10px] uppercase font-semibold text-muted-foreground/40 border border-border/40 rounded px-1.5 py-0.5">
-                    Soon
-                  </span>
-                </div>
-              )
-            }
 
             return (
               <Link
@@ -183,7 +161,7 @@ export function AppSidebar({ organizationContext }: AppSidebarProps) {
       {/* Footer Info */}
       <div className="border-t p-4 text-xs text-muted-foreground">
         <p className="font-medium text-foreground">UpWeGo Foundation</p>
-        <p className="mt-0.5">Phase 3: Clients & Projects</p>
+        <p className="mt-0.5">Tasks · Quotations · Payments</p>
       </div>
     </aside>
   )

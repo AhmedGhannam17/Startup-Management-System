@@ -5,6 +5,12 @@ export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked'
 export type ProjectStatus = 'planning' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled'
 export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type ProjectVisibility = 'organization' | 'restricted'
+export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'blocked'
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type MilestoneStatus = 'not_started' | 'in_progress' | 'completed' | 'on_hold'
+export type QuotationStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'void'
+export type QuotationTemplate = 'classic' | 'modern' | 'minimal'
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'upi' | 'card' | 'other'
 
 export interface Database {
   public: {
@@ -452,6 +458,484 @@ export interface Database {
           },
         ]
       }
+      milestones: {
+        Row: {
+          id: string
+          organization_id: string
+          project_id: string
+          name: string
+          description: string | null
+          status: MilestoneStatus
+          due_date: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          project_id: string
+          name: string
+          description?: string | null
+          status?: MilestoneStatus
+          due_date?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          project_id?: string
+          name?: string
+          description?: string | null
+          status?: MilestoneStatus
+          due_date?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'milestones_project_fkey'
+            columns: ['organization_id', 'project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['organization_id', 'id']
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          id: string
+          organization_id: string
+          project_id: string
+          milestone_id: string | null
+          assignee_id: string | null
+          title: string
+          description: string | null
+          status: TaskStatus
+          priority: TaskPriority
+          due_date: string | null
+          sort_order: number
+          completed_at: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          project_id: string
+          milestone_id?: string | null
+          assignee_id?: string | null
+          title: string
+          description?: string | null
+          status?: TaskStatus
+          priority?: TaskPriority
+          due_date?: string | null
+          sort_order?: number
+          completed_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          project_id?: string
+          milestone_id?: string | null
+          assignee_id?: string | null
+          title?: string
+          description?: string | null
+          status?: TaskStatus
+          priority?: TaskPriority
+          due_date?: string | null
+          sort_order?: number
+          completed_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tasks_project_fkey'
+            columns: ['organization_id', 'project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['organization_id', 'id']
+          },
+          {
+            foreignKeyName: 'tasks_milestone_fkey'
+            columns: ['organization_id', 'project_id', 'milestone_id']
+            isOneToOne: false
+            referencedRelation: 'milestones'
+            referencedColumns: ['organization_id', 'project_id', 'id']
+          },
+          {
+            foreignKeyName: 'tasks_assignee_fkey'
+            columns: ['organization_id', 'assignee_id']
+            isOneToOne: false
+            referencedRelation: 'organization_members'
+            referencedColumns: ['organization_id', 'user_id']
+          },
+        ]
+      }
+      task_checklist_items: {
+        Row: {
+          id: string
+          organization_id: string
+          task_id: string
+          title: string
+          is_completed: boolean
+          sort_order: number
+          completed_at: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          task_id: string
+          title: string
+          is_completed?: boolean
+          sort_order?: number
+          completed_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          task_id?: string
+          title?: string
+          is_completed?: boolean
+          sort_order?: number
+          completed_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'task_checklist_items_task_fkey'
+            columns: ['organization_id', 'task_id']
+            isOneToOne: false
+            referencedRelation: 'tasks'
+            referencedColumns: ['organization_id', 'id']
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          id: string
+          organization_id: string
+          task_id: string
+          author_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          task_id: string
+          author_id?: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          task_id?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'task_comments_task_fkey'
+            columns: ['organization_id', 'task_id']
+            isOneToOne: false
+            referencedRelation: 'tasks'
+            referencedColumns: ['organization_id', 'id']
+          },
+        ]
+      }
+      quotations: {
+        Row: {
+          id: string
+          organization_id: string
+          client_id: string
+          project_id: string | null
+          quote_number: string
+          title: string
+          description: string | null
+          status: QuotationStatus
+          template: QuotationTemplate
+          issue_date: string
+          valid_until: string | null
+          currency: string
+          payment_terms: string | null
+          terms_and_conditions: string | null
+          notes: string | null
+          signatory_name: string | null
+          signatory_title: string | null
+          archived_at: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          client_id: string
+          project_id?: string | null
+          quote_number?: string
+          title: string
+          description?: string | null
+          status?: QuotationStatus
+          template?: QuotationTemplate
+          issue_date?: string
+          valid_until?: string | null
+          currency: string
+          payment_terms?: string | null
+          terms_and_conditions?: string | null
+          notes?: string | null
+          signatory_name?: string | null
+          signatory_title?: string | null
+          archived_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          client_id?: string
+          project_id?: string | null
+          quote_number?: string
+          title?: string
+          description?: string | null
+          status?: QuotationStatus
+          template?: QuotationTemplate
+          issue_date?: string
+          valid_until?: string | null
+          currency?: string
+          payment_terms?: string | null
+          terms_and_conditions?: string | null
+          notes?: string | null
+          signatory_name?: string | null
+          signatory_title?: string | null
+          archived_at?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quotations_client_fkey'
+            columns: ['organization_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['organization_id', 'id']
+          },
+          {
+            foreignKeyName: 'quotations_project_client_fkey'
+            columns: ['organization_id', 'client_id', 'project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['organization_id', 'client_id', 'id']
+          },
+        ]
+      }
+      quotation_line_items: {
+        Row: {
+          id: string
+          organization_id: string
+          quotation_id: string
+          sort_order: number
+          description: string
+          quantity: number
+          unit_price: number
+          discount_percent: number
+          tax_percent: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          quotation_id: string
+          sort_order?: number
+          description: string
+          quantity: number
+          unit_price: number
+          discount_percent?: number
+          tax_percent?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          quotation_id?: string
+          sort_order?: number
+          description?: string
+          quantity?: number
+          unit_price?: number
+          discount_percent?: number
+          tax_percent?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quotation_line_items_quote_fkey'
+            columns: ['organization_id', 'quotation_id']
+            isOneToOne: false
+            referencedRelation: 'quotations'
+            referencedColumns: ['organization_id', 'id']
+          },
+        ]
+      }
+      quotation_audit_events: {
+        Row: {
+          id: string
+          organization_id: string
+          quotation_id: string | null
+          actor_id: string | null
+          action: 'created' | 'updated' | 'status_changed' | 'archived' | 'unarchived' | 'deleted'
+          old_values: Json | null
+          new_values: Json | null
+          occurred_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          quotation_id?: string | null
+          actor_id?: string | null
+          action: 'created' | 'updated' | 'status_changed' | 'archived' | 'unarchived' | 'deleted'
+          old_values?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          quotation_id?: string | null
+          actor_id?: string | null
+          action?: 'created' | 'updated' | 'status_changed' | 'archived' | 'unarchived' | 'deleted'
+          old_values?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          id: string
+          organization_id: string
+          client_id: string
+          project_id: string | null
+          quotation_id: string | null
+          amount: number
+          currency: string
+          paid_on: string
+          method: PaymentMethod
+          reference: string | null
+          notes: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          client_id: string
+          project_id?: string | null
+          quotation_id?: string | null
+          amount: number
+          currency: string
+          paid_on?: string
+          method: PaymentMethod
+          reference?: string | null
+          notes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          client_id?: string
+          project_id?: string | null
+          quotation_id?: string | null
+          amount?: number
+          currency?: string
+          paid_on?: string
+          method?: PaymentMethod
+          reference?: string | null
+          notes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'payments_client_fkey'
+            columns: ['organization_id', 'client_id']
+            isOneToOne: false
+            referencedRelation: 'clients'
+            referencedColumns: ['organization_id', 'id']
+          },
+          {
+            foreignKeyName: 'payments_project_client_fkey'
+            columns: ['organization_id', 'client_id', 'project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['organization_id', 'client_id', 'id']
+          },
+          {
+            foreignKeyName: 'payments_quotation_client_fkey'
+            columns: ['organization_id', 'client_id', 'quotation_id']
+            isOneToOne: false
+            referencedRelation: 'quotations'
+            referencedColumns: ['organization_id', 'client_id', 'id']
+          },
+        ]
+      }
+      payment_audit_events: {
+        Row: {
+          id: string
+          organization_id: string
+          payment_id: string | null
+          actor_id: string | null
+          action: 'created' | 'updated' | 'deleted'
+          old_values: Json | null
+          new_values: Json | null
+          occurred_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          payment_id?: string | null
+          actor_id?: string | null
+          action: 'created' | 'updated' | 'deleted'
+          old_values?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          payment_id?: string | null
+          actor_id?: string | null
+          action?: 'created' | 'updated' | 'deleted'
+          old_values?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -471,6 +955,49 @@ export interface Database {
       accept_invitation: {
         Args: { p_token_hash: string }
         Returns: string
+      }
+      save_quotation: {
+        Args: {
+          p_id: string
+          p_organization_id: string
+          p_client_id: string
+          p_project_id: string | null
+          p_title: string
+          p_description: string | null
+          p_template: QuotationTemplate
+          p_issue_date: string
+          p_valid_until: string | null
+          p_currency: string
+          p_payment_terms: string | null
+          p_terms_and_conditions: string | null
+          p_notes: string | null
+          p_signatory_name: string | null
+          p_signatory_title: string | null
+          p_line_items: Json
+        }
+        Returns: string
+      }
+      reorder_task_checklist_item: {
+        Args: {
+          p_organization_id: string
+          p_task_id: string
+          p_item_id: string
+          p_direction: number
+        }
+        Returns: number
+      }
+      get_payment_totals: {
+        Args: {
+          p_organization_id: string
+          p_client_id: string | null
+          p_project_id: string | null
+          p_quotation_id: string | null
+        }
+        Returns: Array<{
+          currency: string
+          total_received: number
+          received_this_month: number
+        }>
       }
     }
     Enums: {

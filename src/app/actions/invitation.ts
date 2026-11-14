@@ -161,7 +161,7 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
   if (rpcError) {
     return {
       success: false,
-      error: getUserFriendlyDatabaseError(
+      error: getFriendlyInvitationError(
         rpcError,
         'We couldn’t accept this invitation. Please check the link and try again.'
       ),
@@ -179,4 +179,17 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')
+}
+
+function getFriendlyInvitationError(error: { message: string }, _fallback: string) {
+  const normalized = error.message.toLowerCase()
+  if (normalized.includes('verify your email'))
+    return 'Verify your email address before accepting this invitation.'
+  if (normalized.includes('expired'))
+    return 'This invitation has expired. Ask the organization owner for a new link.'
+  if (normalized.includes('different email'))
+    return 'This invitation was sent to a different email address. Sign in with the invited account.'
+  if (normalized.includes('already been accepted')) return 'This invitation has already been used.'
+  if (normalized.includes('revoked')) return 'This invitation was revoked by the organization.'
+  return _fallback
 }

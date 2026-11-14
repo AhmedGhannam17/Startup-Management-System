@@ -81,28 +81,50 @@ Remaining Phase 2 follow-ups are leaked-password protection in Supabase Auth, ba
 
 ## Phase 4 — Tasks and milestones
 
-**Status: Not started**
+**Status: Application implemented; Development migration and authenticated workflow verification pending**
 
-- [ ] Add milestones and tasks with organization/project ownership, status, priority, assignee, and due dates.
-- [ ] Add task checklists, progress calculation, and project notes as specified by the PRD.
-- [ ] Enforce access through server checks and RLS; verify relationships and deletion behavior.
-- [ ] Add focused workflows for task assignment, status updates, overdue work, and milestone progress.
+- [x] Add organization/project-scoped milestones and tasks, assignees, status, priority, and due dates with tenant constraints and indexes in a new migration.
+- [x] Implement task create/edit/delete, status changes, search/filtering, checklists, discussion comments, and milestone management.
+- [x] Derive milestone progress from completed tasks; support task list/detail/edit routes and project detail integration.
+- [x] Enforce server authorization and RLS for organization/project visibility, task managers, milestone managers, and assignee-limited updates.
+- [ ] Apply `20261108052434_phase4_tasks_milestones.sql` to UpWeGo - Development and verify the migration ledger.
+- [ ] Test Owner, Project Manager, Employee, assignee, restricted-project, and cross-organization behavior with authenticated accounts.
 
 ## Phase 5 — Quotations and payment records
 
-**Status: Not started**
+**Status: Application implemented; Development migration and authenticated workflow verification pending**
 
-- [ ] Model quotations and line items with safe concurrent `QUO-YYYY-NNNN` numbering.
-- [ ] Implement quote calculations, reusable templates, organization branding, and professional PDF output.
-- [ ] Model manual payments linked to clients and optional projects/quotations.
-- [ ] Implement payment permissions and traceable edits/deletes; derive received and outstanding totals from persisted records.
+- [x] Add organization/client/project-scoped quotations, line items, payments, currency snapshots, and retained audit history in a new migration.
+- [x] Allocate quotation numbers atomically per organization and issue year; save line items atomically and lock issued quote contents.
+- [x] Implement quote create/edit/status/archive/restore/delete/duplicate/history and browser print-to-PDF routes.
+- [x] Implement manual payment create/edit/delete/history, quote currency consistency, and currency-grouped received/outstanding totals.
+- [x] Add quotation/payment dashboard and client detail summaries; enforce Owner/Project Manager financial access in server actions and RLS.
+- [ ] Apply `20261108052448_phase5_quotations_payments.sql` after the Phase 4 migration and verify the migration ledger.
+- [ ] Test quote calculations, numbering under concurrent saves, status transitions, print output, payment linking/currency rules, audit retention, and role boundaries.
+
+Both migrations are prepared locally and have not been applied to Development. Keep `first.sql` unchanged; apply the two new files through the established migration workflow in timestamp order.
+
+### Owner application and verification checklist
+
+1. Apply `20261108052434_phase4_tasks_milestones.sql`, then `20261108052448_phase5_quotations_payments.sql`, to **UpWeGo - Development** using the project's established Supabase migration workflow. Confirm both versions in the Development migration ledger before opening the new routes. Do not apply either file to Production as part of this step.
+2. With an Owner account, create/edit/complete/delete tasks; add and complete checklist items; reorder the checklist; add comments; create/edit/delete milestones; confirm milestone progress follows completed tasks and deleting a milestone preserves its tasks.
+3. With Project Manager, Employee, task assignee, and a second-organization account, verify allowed task/milestone actions, restricted-project visibility, and denial of cross-organization access.
+4. Create a multi-line quotation; verify quantity, discount, tax, subtotal/total, quote numbering, edit/reorder, duplicate, archive/restore, delete, status transitions, and issued-quote content lock. Print/save a PDF and check the output.
+5. Create, edit, and delete payments with and without a quote; verify quote currency enforcement, currency snapshots after workspace currency changes, separate currency totals, audit history after deletion, and client outstanding totals.
+6. Rerun Phase 1/2 authentication, organization/team, and invitation acceptance/rejection/revocation/expiry checks. In the browser, confirm the clicked route shows the skeleton immediately and that the destination renders after loading.
+
+**Local checks performed for this implementation:** `npx tsc --noEmit` passed; `npm run lint` passed with no warnings/errors (the script prints Next.js's existing `next lint` deprecation notice); `npm run build` passed. The final Prettier check is recorded below. No authenticated application workflows, database RLS checks, or Phase 1/2 regression flows were run in this implementation turn; there is no configured automated test suite.
+
+**Prettier:** Passed for the changed application files and the three updated documentation files.
 
 ## Phase 6 — Operational overview and cross-cutting workflows
 
-**Status: In progress (dashboard shell only)**
+**Status: In progress (dashboard shell and persisted task/financial summaries)**
 
 - [x] Dashboard shell with organization and team-member count.
-- [x] Replace client/project metrics with persisted, RLS-filtered data. Revenue remains a Phase 5 placeholder.
+- [x] Replace client/project metrics with persisted, RLS-filtered data; show persisted payment totals grouped by currency.
+- [x] Add task, quotation, payment, and history navigation routes.
+- [x] Show an immediate shared skeleton after internal workspace navigation while the destination route loads.
 - [ ] Add relevant project/task deadlines and recent activity.
 - [ ] Add search and filtering across implemented business modules.
 - [ ] Add notifications/reminders after the related business events and delivery approach are defined.

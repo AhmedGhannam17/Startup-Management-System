@@ -18,12 +18,18 @@ type TableQuery<K extends keyof TableMap> = PromiseLike<QueryResult<TableRow<K>[
   ): TableQuery<K>
   eq(column: string, value: unknown): TableQuery<K>
   neq(column: string, value: unknown): TableQuery<K>
+  lt(column: string, value: unknown): TableQuery<K>
+  lte(column: string, value: unknown): TableQuery<K>
+  gt(column: string, value: unknown): TableQuery<K>
+  gte(column: string, value: unknown): TableQuery<K>
   is(column: string, value: null | boolean): TableQuery<K>
   not(column: string, operator: string, value: unknown): TableQuery<K>
   in(column: string, values: readonly unknown[]): TableQuery<K>
   ilike(column: string, pattern: string): TableQuery<K>
   or(filters: string): TableQuery<K>
   order(column: string, options?: { ascending?: boolean; nullsFirst?: boolean }): TableQuery<K>
+  limit(count: number): TableQuery<K>
+  range(from: number, to: number): TableQuery<K>
   insert(values: TableInsert<K> | TableInsert<K>[]): TableQuery<K>
   update(values: TableUpdate<K>): TableQuery<K>
   upsert(

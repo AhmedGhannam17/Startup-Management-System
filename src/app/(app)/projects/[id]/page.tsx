@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SectionTitle } from '@/components/clients-projects/record-form'
 import { saveProjectMembers } from '@/app/actions/clients-projects'
+import { MilestoneForm, type MilestoneFormValue } from '@/components/work-management/milestone-form'
 import { createServerClient } from '@/lib/supabase/server'
 import { getActiveOrganizationContext } from '@/lib/organization/context'
 import type { Database } from '@/types/supabase'
@@ -19,7 +20,15 @@ export default async function ProjectPage({
   if (!context) redirect('/onboarding')
   const { id } = await params
   const supabase = await createServerClient()
-  const [{ data: p }, { data: details }, { data: members }, { error }] = await Promise.all([
+  const [
+    { data: p },
+    { data: details },
+    { data: members },
+    { error },
+    { data: milestones },
+    { data: tasks },
+    { data: payments },
+  ] = await Promise.all([
     supabase
       .from('projects')
       .select('*,clients(name)')
@@ -35,6 +44,26 @@ export default async function ProjectPage({
       .eq('project_id', id)
       .eq('organization_id', context.organization.id),
     searchParams,
+    supabase
+      .from('milestones')
+      .select('*')
+      .eq('project_id', id)
+      .eq('organization_id', context.organization.id)
+      .order('due_date', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('tasks')
+      .select('id,title,status,priority,due_date,assignee_id,milestone_id')
+      .eq('project_id', id)
+      .eq('organization_id', context.organization.id)
+      .order('created_at', { ascending: false }),
+    context.isManager
+      ? supabase.rpc('get_payment_totals', {
+          p_organization_id: context.organization.id,
+          p_client_id: null,
+          p_project_id: id,
+          p_quotation_id: null,
+        })
+      : Promise.resolve({ data: [] }),
   ])
   if (!p) notFound()
   const { data: people } = await supabase
@@ -45,6 +74,9 @@ export default async function ProjectPage({
     ...new Set([
       ...(people ?? []).map((person) => person.user_id),
       ...(members ?? []).map((member) => member.user_id),
+      ...(tasks ?? [])
+        .map((task) => task.assignee_id)
+        .filter((userId): userId is string => Boolean(userId)),
     ]),
   ]
   const { data: profiles } = profileIds.length
@@ -53,7 +85,7 @@ export default async function ProjectPage({
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile.full_name]))
   const { data: mine } = await supabase
     .from('project_members')
-    .select('is_project_manager,can_manage_members')
+    .select('is_project_manager,can_manage_members,can_manage_tasks,can_manage_milestones')
     .eq('project_id', id)
     .eq('user_id', context.membership.user_id)
     .maybeSingle()
@@ -62,6 +94,19 @@ export default async function ProjectPage({
     (context.role === 'project_manager' && p.created_by === context.membership.user_id) ||
     mine?.is_project_manager ||
     mine?.can_manage_members
+  const canManageTasks =
+    context.isOwner ||
+    (context.role === 'project_manager' && p.created_by === context.membership.user_id) ||
+    mine?.is_project_manager ||
+    mine?.can_manage_tasks
+  const canManageMilestones =
+    context.isOwner ||
+    (context.role === 'project_manager' && p.created_by === context.membership.user_id) ||
+    mine?.is_project_manager ||
+    mine?.can_manage_milestones
+  const projectPayments = (payments ?? []).filter(
+    (payment) => payment.currency === context.organization.currency
+  )
   const client = (
     p as unknown as Database['public']['Tables']['projects']['Row'] & {
       clients: { name: string } | null
@@ -115,6 +160,162 @@ export default async function ProjectPage({
           </CardContent>
         </Card>
       </div>
+      {context.isManager && details?.project_value != null && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Project financial summary</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 text-sm sm:grid-cols-3">
+            <div>
+              <p className="text-muted-foreground">Project value</p>
+              <p className="font-semibold">
+                {context.organization.currency} {Number(details.project_value).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Payments received</p>
+              <p className="font-semibold">
+                {context.organization.currency}{' '}
+                {projectPayments
+                  .reduce((sum, payment) => sum + Number(payment.total_received), 0)
+                  .toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Remaining</p>
+              <p className="font-semibold">
+                {context.organization.currency}{' '}
+                {Math.max(
+                  0,
+                  Number(details.project_value) -
+                    projectPayments.reduce(
+                      (sum, payment) => sum + Number(payment.total_received),
+                      0
+                    )
+                ).toLocaleString()}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>Milestones</CardTitle>
+          {canManageMilestones && (
+            <span className="text-xs text-muted-foreground">
+              Milestone progress is derived from its tasks.
+            </span>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(milestones ?? []).length ? (
+            <div className="space-y-3">
+              {milestones?.map((milestone) => {
+                const milestoneTasks = (tasks ?? []).filter(
+                  (task) => task.milestone_id === milestone.id
+                )
+                const done = milestoneTasks.filter((task) => task.status === 'completed').length
+                const percent = milestoneTasks.length
+                  ? Math.round((done / milestoneTasks.length) * 100)
+                  : 0
+                return (
+                  <div key={milestone.id} className="rounded-md border p-3">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <div>
+                        <p className="font-medium">{milestone.name}</p>
+                        {milestone.description && (
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                            {milestone.description}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-sm capitalize text-muted-foreground">
+                        {milestone.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="h-2 flex-1 overflow-hidden rounded bg-muted">
+                        <div
+                          className="h-full rounded bg-primary"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span>
+                        {done}/{milestoneTasks.length} tasks · {percent}%
+                      </span>
+                      {milestone.due_date && <span>Due {milestone.due_date}</span>}
+                    </div>
+                    {canManageMilestones && (
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-xs font-medium">
+                          Edit milestone
+                        </summary>
+                        <div className="mt-2">
+                          <MilestoneForm
+                            projectId={id}
+                            milestone={milestone as MilestoneFormValue}
+                          />
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No milestones for this project yet.</p>
+          )}
+          {canManageMilestones && (
+            <details className="rounded-md border border-dashed p-3">
+              <summary className="cursor-pointer text-sm font-medium">Add a milestone</summary>
+              <div className="mt-3">
+                <MilestoneForm projectId={id} />
+              </div>
+            </details>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>Project tasks</CardTitle>
+          {canManageTasks && (
+            <Button asChild size="sm">
+              <Link href={`/tasks/new?projectId=${id}`}>Add task</Link>
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {(tasks ?? []).length ? (
+            <ul className="divide-y">
+              {tasks?.map((task) => (
+                <li
+                  key={task.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-3"
+                >
+                  <div>
+                    <Link href={`/tasks/${task.id}`} className="font-medium hover:underline">
+                      {task.title}
+                    </Link>
+                    <p className="text-xs capitalize text-muted-foreground">
+                      {task.priority} priority{task.due_date ? ` · due ${task.due_date}` : ''}
+                      {task.assignee_id
+                        ? ` · ${profileById.get(task.assignee_id) || 'Assigned'}`
+                        : ' · Unassigned'}
+                    </p>
+                  </div>
+                  <span className="text-sm capitalize text-muted-foreground">
+                    {task.status.replace('_', ' ')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No tasks have been added to this project.
+            </p>
+          )}
+        </CardContent>
+      </Card>
       {details && (
         <Card>
           <CardHeader>

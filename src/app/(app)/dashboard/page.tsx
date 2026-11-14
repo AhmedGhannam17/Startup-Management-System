@@ -23,8 +23,9 @@ export default async function DashboardPage() {
   let memberCount = 0
   let clientCount = 0
   let projectCount = 0
+  let receivedTotal = 0
   if (orgContext?.organization) {
-    const [members, clients, projects] = await Promise.all([
+    const [members, clients, projects, payments] = await Promise.all([
       supabase
         .from('organization_members')
         .select('id', { count: 'exact', head: true })
@@ -39,11 +40,35 @@ export default async function DashboardPage() {
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', orgContext.organization.id)
         .not('status', 'in', '(completed,cancelled)'),
+      orgContext.isManager
+        ? supabase.rpc('get_payment_totals', {
+            p_organization_id: orgContext.organization.id,
+            p_client_id: null,
+            p_project_id: null,
+            p_quotation_id: null,
+          })
+        : Promise.resolve({ data: [] }),
     ])
     memberCount = members.count || 0
     clientCount = clients.count || 0
     projectCount = projects.count || 0
+    receivedTotal = Number(
+      (payments.data ?? []).find((payment) => payment.currency === orgContext.organization.currency)
+        ?.total_received ?? 0
+    )
   }
+  const formattedReceived = orgContext?.organization
+    ? (() => {
+        try {
+          return new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: orgContext.organization.currency,
+          }).format(receivedTotal)
+        } catch {
+          return `${orgContext.organization.currency} ${receivedTotal.toFixed(2)}`
+        }
+      })()
+    : '—'
 
   return (
     <div className="space-y-8">
@@ -115,14 +140,12 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Payments Received</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {orgContext?.organization?.currency || 'USD'} $0.00
-            </div>
-            <p className="text-xs text-muted-foreground">Quotations & Payments shell</p>
+            <div className="text-2xl font-bold">{formattedReceived}</div>
+            <p className="text-xs text-muted-foreground">Recorded payments in this workspace</p>
           </CardContent>
         </Card>
       </div>

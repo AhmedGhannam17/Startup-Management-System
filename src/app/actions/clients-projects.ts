@@ -327,7 +327,13 @@ export async function saveProjectMembers(form: FormData) {
     can_view:
       person.user_id === project.created_by ||
       form.get(`view:${person.user_id}`) === 'on' ||
-      person.user_id === chosenManager,
+      person.user_id === chosenManager ||
+      form.get(`edit:${person.user_id}`) === 'on' ||
+      form.get(`members:${person.user_id}`) === 'on' ||
+      form.get(`tasks:${person.user_id}`) === 'on' ||
+      form.get(`milestones:${person.user_id}`) === 'on' ||
+      form.get(`info:${person.user_id}`) === 'on' ||
+      form.get(`sensitive:${person.user_id}`) === 'on',
     can_edit:
       person.user_id === project.created_by ||
       form.get(`edit:${person.user_id}`) === 'on' ||
